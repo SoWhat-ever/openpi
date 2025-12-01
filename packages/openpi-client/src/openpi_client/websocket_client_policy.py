@@ -22,22 +22,26 @@ class WebsocketClientPolicy(_base_policy.BasePolicy):
             self._uri = f"ws://{host}"
         if port is not None:
             self._uri += f":{port}"
-        self._packer = msgpack_numpy.Packer()
+        self._packer = msgpack_numpy.Packer()   # 用于序列化发送的数据
         self._api_key = api_key
-        self._ws, self._server_metadata = self._wait_for_server()
+        self._ws, self._server_metadata = self._wait_for_server()   # 连接服务器并获取 metadata
 
     def get_server_metadata(self) -> Dict:
         return self._server_metadata
 
     def _wait_for_server(self) -> Tuple[websockets.sync.client.ClientConnection, Dict]:
+        # 同步连接到 WebSocket 服务器，获取初始 metadata
         logging.info(f"Waiting for server at {self._uri}...")
+        # 循环确保如果服务器尚未启动，会每 5 秒重试
         while True:
             try:
+                # 如果提供了 API key，则在请求头中带上 Authorization
                 headers = {"Authorization": f"Api-Key {self._api_key}"} if self._api_key else None
                 conn = websockets.sync.client.connect(
                     self._uri, compression=None, max_size=None, additional_headers=headers
                 )
                 metadata = msgpack_numpy.unpackb(conn.recv())
+                # 返回 WebSocket 连接对象和 metadata
                 return conn, metadata
             except ConnectionRefusedError:
                 logging.info("Still waiting for server...")
@@ -45,14 +49,18 @@ class WebsocketClientPolicy(_base_policy.BasePolicy):
 
     @override
     def infer(self, obs: Dict) -> Dict:  # noqa: UP006
+        # 将 obs 序列化成 bytes
         data = self._packer.pack(obs)
         self._ws.send(data)
         response = self._ws.recv()
+        # 如果返回的是字符串而非 bytes，说明服务器返回了错误信息，抛出异常
         if isinstance(response, str):
             # we're expecting bytes; if the server sends a string, it's an error.
             raise RuntimeError(f"Error in inference server:\n{response}")
+        # 否则，将 bytes 解包成 Python 对象返回
         return msgpack_numpy.unpackb(response)
 
     @override
     def reset(self) -> None:
+        # 空实现，符合策略接口要求
         pass

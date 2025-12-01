@@ -377,7 +377,7 @@ Openpi:.
 │  │      compose.yml
 │  │      convert_libero_data_to_lerobot.py
 │  │      Dockerfile
-│  │      main.py：客户端，发送字典 [主视角图像， 手腕相机图像， 机器人状态（位置、姿态、夹爪状态）， 任务描述文本] 
+│  │      main.py：客户端启动脚本，发送字典 [主视角图像， 手腕相机图像， 机器人状态（位置、姿态、夹爪状态）， 任务描述文本] 
 │  │      README.md
 │  │      requirements.in
 │  │      requirements.txt
@@ -405,7 +405,7 @@ Openpi:.
 │              │  image_tools_test.py
 │              │  msgpack_numpy.py
 │              │  msgpack_numpy_test.py
-│              │  websocket_client_policy.py
+│              │  websocket_client_policy.py: 客户端封装
 │              │  __init__.py
 │              │
 │              └─runtime
@@ -419,7 +419,7 @@ Openpi:.
 │
 ├─scripts
 │  │  compute_norm_stats.py
-│  │  serve_policy.py: 服务端，提供策略服务
+│  │  serve_policy.py: 服务端启动脚本，提供策略服务
 │  │  train.py
 │  │  train_pytorch.py
 │  │  train_test.py
@@ -486,7 +486,7 @@ Openpi:.
 │      │      policy_test.py
 │      │
 │      ├─serving
-│      │      websocket_policy_server.py
+│      │      websocket_policy_server.py # 服务器封装
 │      │
 │      ├─shared
 │      │      array_typing.py
