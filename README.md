@@ -461,7 +461,7 @@ Openpi:.
 │      │
 │      ├─models_pytorch
 │      │  │  gemma_pytorch.py
-│      │  │  pi0_pytorch.py
+│      │  │  pi0_pytorch.py: PI0(Policy Iteration Zero)模型的PyTorch版本
 │      │  │  preprocessing_pytorch.py
 │      │  │
 │      │  └─transformers_replace
