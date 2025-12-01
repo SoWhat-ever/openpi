@@ -23,6 +23,7 @@ def create_trained_policy(
     norm_stats: dict[str, transforms.NormStats] | None = None,
     pytorch_device: str | None = None,
 ) -> _policy.Policy:
+    # 从训练好的 checkpoint 创建一个策略（Policy），可直接用于推理或评估
     """Create a policy from a trained checkpoint.
 
     Args:
@@ -42,20 +43,32 @@ def create_trained_policy(
         The function automatically detects whether the model is PyTorch-based by checking for the
         presence of "model.safensors" in the checkpoint directory.
     """
+    # 如果没有提供 repack_transforms，就用空的 transforms.Group()
     repack_transforms = repack_transforms or transforms.Group()
+    # checkpoint 自动下载（远程 URL 或本地路径都可用）
     checkpoint_dir = download.maybe_download(str(checkpoint_dir))
 
+    # model.safetensors 文件存在 → PyTorch 模型
+    # 否则 → 可能是 JAX / Flax 模型
     # Check if this is a PyTorch model by looking for model.safetensors
     weight_path = os.path.join(checkpoint_dir, "model.safetensors")
     is_pytorch = os.path.exists(weight_path)
 
     logging.info("Loading model...")
     if is_pytorch:
+        # 调用模型类的 load_pytorch 方法加载权重
         model = train_config.model.load_pytorch(train_config, weight_path)
+        # 对部分参数转换为 bfloat16，减少显存占用，提高推理速度
         model.paligemma_with_expert.to_bfloat16_for_selected_params("bfloat16")
     else:
+        # 调用 load + _model.restore_params 从 checkpoint 恢复权重
         model = train_config.model.load(_model.restore_params(checkpoint_dir / "params", dtype=jnp.bfloat16))
+    
+    # 根据训练配置创建数据管线配置
     data_config = train_config.data.create(train_config.assets_dirs, train_config.model)
+
+    # 如果没有提供 norm_stats，就从 checkpoint 加载
+    # 归一化统计用于数据预处理（标准化、归一化,保证推理时和训练一致
     if norm_stats is None:
         # We are loading the norm stats from the checkpoint instead of the config assets dir to make sure
         # that the policy is using the same normalization stats as the original training process.
@@ -63,6 +76,7 @@ def create_trained_policy(
             raise ValueError("Asset id is required to load norm stats.")
         norm_stats = _checkpoints.load_norm_stats(checkpoint_dir / "assets", data_config.asset_id)
 
+    # 自动选择 GPU 或 CPU;如果环境没有 PyTorch，默认使用 CPU
     # Determine the device to use for PyTorch models
     if is_pytorch and pytorch_device is None:
         try:
@@ -72,7 +86,26 @@ def create_trained_policy(
         except ImportError:
             pytorch_device = "cpu"
 
+    # 返回 _policy.Policy 对象，可以直接调用 policy.sample_actions() 生成动作
     return _policy.Policy(
+        ''' 
+        model → 训练好的模型
+        transforms → 模型输入前的变换列表：
+            可选的 repack_transforms
+            注入默认语言 prompt
+            数据管线预处理
+            归一化
+            模型特定输入变换
+        output_transforms → 模型输出后的变换列表：
+            模型特定输出变换
+            去归一化(Unnormalize)
+            数据管线输出变换
+            repack_transforms 输出
+        sample_kwargs → 调用 sample_actions() 时的参数
+        metadata → 策略元信息
+        is_pytorch / pytorch_device → PyTorch 模型运行设备
+        '''
+        
         model,
         transforms=[
             *repack_transforms.inputs,

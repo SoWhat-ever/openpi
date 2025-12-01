@@ -14,10 +14,10 @@ from openpi.training import config as _config
 class EnvMode(enum.Enum):
     """Supported environments."""
 
-    ALOHA = "aloha"
-    ALOHA_SIM = "aloha_sim"
-    DROID = "droid"
-    LIBERO = "libero"
+    ALOHA = "aloha"             # 真实 ALOHA 机器人环境
+    ALOHA_SIM = "aloha_sim"     # ALOHA 仿真环境
+    DROID = "droid"             # Droid
+    LIBERO = "libero"           # LIBERO benchmark
 
 
 @dataclasses.dataclass
@@ -55,6 +55,9 @@ class Args:
     policy: Checkpoint | Default = dataclasses.field(default_factory=Default)
 
 
+# 定义不同环境模式下预训练模型的默认检查点配置
+# 每个环境对应一个预训练号的模型checkpoint，包括配置名称和模型存储路径
+# 这些checkpoint存储在S3存储桶中，用于快速加载预训练模型
 # Default checkpoints that should be used for each environment.
 DEFAULT_CHECKPOINT: dict[EnvMode, Checkpoint] = {
     EnvMode.ALOHA: Checkpoint(
@@ -78,7 +81,10 @@ DEFAULT_CHECKPOINT: dict[EnvMode, Checkpoint] = {
 
 def create_default_policy(env: EnvMode, *, default_prompt: str | None = None) -> _policy.Policy:
     """Create a default policy for the given environment."""
+    # 查找这个环境对应的默认 checkpoint（字典中查找）
     if checkpoint := DEFAULT_CHECKPOINT.get(env):
+        # 根据 checkpoint 的 config 和目录创建训练好的策略
+        # 注入 default_prompt
         return _policy_config.create_trained_policy(
             _config.get_config(checkpoint.config), checkpoint.dir, default_prompt=default_prompt
         )
@@ -108,15 +114,17 @@ def main(args: Args) -> None:
     local_ip = socket.gethostbyname(hostname)
     logging.info("Creating server (host: %s, ip: %s)", hostname, local_ip)
 
+    # 核心代码
     server = websocket_policy_server.WebsocketPolicyServer(
         policy=policy,
-        host="0.0.0.0",
-        port=args.port,
+        host="0.0.0.0", # 监听所以网络接口
+        port=args.port, # 默认端口8000
         metadata=policy_metadata,
     )
-    server.serve_forever()
+    server.serve_forever()  # 永久运行服务器
 
 
 if __name__ == "__main__":
     logging.basicConfig(level=logging.INFO, force=True)
+    # 使用 Tyro 自动解析命令行参数到 Args 数据类， main(...) → 启动策略服务
     main(tyro.cli(Args))

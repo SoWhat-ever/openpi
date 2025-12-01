@@ -323,3 +323,202 @@ We will collect common issues and their solutions here. If you encounter an issu
 | Diverging training loss                            | Check the `q01`, `q99`, and `std` values in `norm_stats.json` for your dataset. Certain dimensions that are rarely used can end up with very small `q01`, `q99`, or `std` values, leading to huge states and actions after normalization. You can manually adjust the norm stats as a workaround. |
 
 ## Comment
+
+Openpi:.
+│  CONTRIBUTING.md
+│  LICENSE
+│  LICENSE_GEMMA.txt
+│  pyproject.toml: Python 项目的统一配置文件,类似pip 的 requirements.txt
+│  README.md
+│  uv.lock：uv 自动生成的依赖锁定文件，确保 Python 项目依赖版本可重复、稳定
+│
+├─docs
+│      docker.md
+│      norm_stats.md
+│      remote_inference.md
+│
+├─examples
+│  │  convert_jax_model_to_pytorch.py
+│  │  inference.ipynb
+│  │  policy_records.ipynb
+│  │
+│  ├─aloha_real
+│  │      compose.yml
+│  │      constants.py
+│  │      convert_aloha_data_to_lerobot.py
+│  │      Dockerfile
+│  │      env.py
+│  │      main.py
+│  │      README.md
+│  │      real_env.py
+│  │      requirements.in
+│  │      requirements.txt
+│  │      robot_utils.py
+│  │      video_display.py
+│  │
+│  ├─aloha_sim
+│  │      compose.yml
+│  │      Dockerfile
+│  │      env.py
+│  │      main.py
+│  │      README.md
+│  │      requirements.in
+│  │      requirements.txt
+│  │      saver.py
+│  │
+│  ├─droid
+│  │      compute_droid_nonidle_ranges.py
+│  │      convert_droid_data_to_lerobot.py
+│  │      main.py
+│  │      README.md
+│  │      README_train.md
+│  │
+│  ├─libero
+│  │      compose.yml
+│  │      convert_libero_data_to_lerobot.py
+│  │      Dockerfile
+│  │      main.py：客户端，发送字典 [主视角图像， 手腕相机图像， 机器人状态（位置、姿态、夹爪状态）， 任务描述文本] 
+│  │      README.md
+│  │      requirements.in
+│  │      requirements.txt
+│  │
+│  ├─simple_client
+│  │      compose.yml
+│  │      Dockerfile
+│  │      main.py
+│  │      README.md
+│  │      requirements.in
+│  │      requirements.txt
+│  │
+│  └─ur5
+│          README.md
+│
+├─packages
+│  └─openpi-client
+│      │  pyproject.toml
+│      │
+│      └─src
+│          └─openpi_client
+│              │  action_chunk_broker.py
+│              │  base_policy.py
+│              │  image_tools.py
+│              │  image_tools_test.py
+│              │  msgpack_numpy.py
+│              │  msgpack_numpy_test.py
+│              │  websocket_client_policy.py
+│              │  __init__.py
+│              │
+│              └─runtime
+│                  │  agent.py
+│                  │  environment.py
+│                  │  runtime.py
+│                  │  subscriber.py
+│                  │
+│                  └─agents
+│                          policy_agent.py
+│
+├─scripts
+│  │  compute_norm_stats.py
+│  │  serve_policy.py: 服务端，提供策略服务
+│  │  train.py
+│  │  train_pytorch.py
+│  │  train_test.py
+│  │  __init__.py
+│  │
+│  └─docker
+│          compose.yml
+│          install_docker_ubuntu22.sh
+│          install_nvidia_container_toolkit.sh
+│          serve_policy.Dockerfile
+│
+├─src
+│  └─openpi
+│      │  conftest.py
+│      │  py.typed
+│      │  transforms.py
+│      │  transforms_test.py
+│      │  __init__.py
+│      │
+│      ├─models
+│      │  │  gemma.py
+│      │  │  gemma_fast.py
+│      │  │  lora.py
+│      │  │  lora_test.py
+│      │  │  model.py
+│      │  │  model_test.py
+│      │  │  pi0.py
+│      │  │  pi0_config.py
+│      │  │  pi0_fast.py
+│      │  │  pi0_test.py
+│      │  │  siglip.py
+│      │  │  tokenizer.py
+│      │  │  tokenizer_test.py
+│      │  │  vit.py
+│      │  │  __init__.py
+│      │  │
+│      │  └─utils
+│      │          fsq_tokenizer.py
+│      │
+│      ├─models_pytorch
+│      │  │  gemma_pytorch.py
+│      │  │  pi0_pytorch.py
+│      │  │  preprocessing_pytorch.py
+│      │  │
+│      │  └─transformers_replace
+│      │      └─models
+│      │          ├─gemma
+│      │          │      configuration_gemma.py
+│      │          │      modeling_gemma.py
+│      │          │
+│      │          ├─paligemma
+│      │          │      modeling_paligemma.py
+│      │          │
+│      │          └─siglip
+│      │                  check.py
+│      │                  modeling_siglip.py
+│      │
+│      ├─policies
+│      │      aloha_policy.py
+│      │      droid_policy.py
+│      │      libero_policy.py
+│      │      policy.py
+│      │      policy_config.py：加载模型和策略配置
+│      │      policy_test.py
+│      │
+│      ├─serving
+│      │      websocket_policy_server.py
+│      │
+│      ├─shared
+│      │      array_typing.py
+│      │      download.py
+│      │      download_test.py
+│      │      image_tools.py
+│      │      image_tools_test.py
+│      │      nnx_utils.py
+│      │      normalize.py
+│      │      normalize_test.py
+│      │      __init__.py
+│      │
+│      ├─training
+│      │  │  checkpoints.py
+│      │  │  config.py
+│      │  │  data_loader.py
+│      │  │  data_loader_test.py
+│      │  │  droid_rlds_dataset.py
+│      │  │  optimizer.py
+│      │  │  sharding.py
+│      │  │  utils.py
+│      │  │  weight_loaders.py
+│      │  │
+│      │  └─misc
+│      │          roboarena_config.py
+│
+└─third_party
+    ├─aloha：双臂或单臂控制接口，数据采集
+    └─libero：提供统一的环境和数据集，多任务 benchmark，算法评估
+
+1. libero_spatial： 空间理解和操作任务
+2. libero_object： 操作不同类型物体的能力
+3. libero_goal：根据指定的最终目标状态完成任务
+4. libero_10： 少量多样化任务上的通用性
+5. libero_90：大规模、多样化任务上的通用性

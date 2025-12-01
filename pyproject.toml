@@ -1,3 +1,6 @@
+# pyproject.toml 是 Python 项目的统一配置文件，用来标准化 Python 项目的构建、依赖管理和工具配置
+# 可以让你在一个文件里配置构建系统、依赖、格式化工具、打包信息等
+# pip install . 安装这个项目，会自动读取 pyproject.toml 的依赖并安装
 [project]
 name = "openpi"
 version = "0.1.0"
@@ -43,6 +46,9 @@ dependencies = [
 [project.urls]
 Repository = "https://github.com/Physical-Intelligence/openpi"
 
+# 可选依赖或分组依赖，通常用于开发、测试或特定功能的依赖，而不是项目运行时的必需依赖
+# pip install .[dev]
+# pip install .[rlds]
 [dependency-groups]
 dev = [
     "pytest>=8.3.4",
@@ -59,22 +65,32 @@ rlds = [
     "tensorflow-datasets==4.9.9",
 ]
 
+# [tool.<name>] 用于给第三方工具写配置
+# tool.uv 的含义是：这个 override 是给 uv 工具看的，对pip没有效果（Astral 的 uv：新一代超快 Python 包管理器）
+# 覆盖（override）依赖树中任何包对这些库的版本要求，强制这些依赖使用指定版本
 [tool.uv]
 override-dependencies = ["ml-dtypes==0.4.1", "tensorstore==0.1.74"]
 
+# 指定依赖的来源（本地 workspace、Git、URL 等）
+# openpi-client 这个依赖来自当前项目的 workspace（本地子包），而不是从 PyPI 或 Git 下载
+# lerobot 和 dlimp 不从 PyPI 装而是从 GitHub 拉取指定 commit（rev）版本
 [tool.uv.sources]
 openpi-client = { workspace = true }
 lerobot = { git = "https://github.com/huggingface/lerobot", rev = "0cf864870cf29f4738d3ade893e6fd13fbd7cdb5" }
 dlimp = { git = "https://github.com/kvablack/dlimp", rev = "ad72ce3a9b414db2185bc0b38461d4101a65477a" }
 
+# 这个项目是一个 monorepo / 多包 workspace，包含 packages/ 目录下的所有包
 [tool.uv.workspace]
 members = ["packages/*"]
 
+# Ruff 是一个超快的 Python 代码检查 & 格式化工具，这些配置控制 Ruff 如何扫描和格式化代码
 [tool.ruff]
 line-length = 120
 target-version = "py311"
 extend-exclude = ["docker", "third_party", "src/openpi/models_pytorch/transformers_replace/*"]
 
+# Ruff 的 Linter 规则选择器，决定 Ruff 会启用哪些检测规则
+# 包含 ignore（忽略规则） 和 unfixable（禁止自动修复的规则）
 [tool.ruff.lint]
 # https://docs.astral.sh/ruff/rules/
 select = [
@@ -122,16 +138,23 @@ unfixable = [
     "B905", # Fix defaults to strict=False, which is not what we want.
 ]
 
+# 所有 import 强制一行一个
+# import 分组内部强制排序
+# 对某些模块允许多成员写在一行
+# 指定wandb属于第三方，如果不声明，有时 isort 无法准确判断它属于：标准库、第三方依赖、本地模块
 [tool.ruff.lint.isort]
 force-single-line = true
 force-sort-within-sections = true
 single-line-exclusions = ["collections.abc", "typing", "typing_extensions"]
 known-third-party = ["wandb"]
 
+# 用 hatchling 来打包、构建项目
 [build-system]
 requires = ["hatchling"]
 build-backend = "hatchling.build"
 
+# 声明自定义标记（marker），这里定义需要手动运行的测试
+# testpaths 告诉 pytest 去哪里查找测试文件
 [tool.pytest.ini_options]
 markers = ["manual: should be run manually."]
 testpaths = ["src", "scripts", "packages"]
