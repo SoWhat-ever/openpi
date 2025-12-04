@@ -1,3 +1,6 @@
+# JAX: 高性能数据计算库（类似PyTorch的底层）
+# Flax：基于JAX的神经网络库（类似PyTorch的 nn.Model）
+# 直接看 train_pytorch.py 即可
 import dataclasses
 import functools
 import logging
