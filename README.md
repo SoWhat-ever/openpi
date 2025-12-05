@@ -460,9 +460,9 @@ Openpi:.
 │      │          fsq_tokenizer.py
 │      │
 │      ├─models_pytorch
-│      │  │  gemma_pytorch.py
+│      │  │  gemma_pytorch.py： 结合PaliGemma LVM和Gemma专家模型的混合模型
 │      │  │  pi0_pytorch.py: PI0(Policy Iteration Zero)模型的PyTorch版本
-│      │  │  preprocessing_pytorch.py
+│      │  │  preprocessing_pytorch.py: Pytorch版本的观测数据预处理功能
 │      │  │
 │      │  └─transformers_replace
 │      │      └─models
