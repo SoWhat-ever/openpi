@@ -78,21 +78,28 @@ class Pi0Config(_model.BaseModelConfig):
 
     def get_freeze_filter(self) -> nnx.filterlib.Filter:
         """Returns the freeze filter based on the model config."""
-        filters = []
+        filters = []    # 存放后续的过滤条件
         has_lora = False
+        # 匹配路径中包含 llm 的参数 → 通常是 PaliGemma 模型的核心参数
         gemma_params_filter = nnx_utils.PathRegex(".*llm.*")
+        # 匹配 llm 且带 _1 的参数 → 通常是动作专家网络参数
         action_expert_params_filter = nnx_utils.PathRegex(".*llm.*_1.*")
+        # 如果 paligemma 使用 LORA
         if "lora" in self.paligemma_variant:
+            # 把核心参数 (llm) 加入过滤列表
             filters.append(
                 gemma_params_filter,
             )
             if "lora" not in self.action_expert_variant:
+                # 如果动作专辑没使用 LORA，保持专家参数可训练，只冻结 paligemma 参数
                 # If only freeze gemma params, exclude action expert params.
                 filters.append(
                     nnx.Not(action_expert_params_filter),
                 )
             has_lora = True
+        # 如果 paligemma 没使用 LORA， 只有 expert 使用
         elif "lora" in self.action_expert_variant:
+            # 过滤掉 expert 核心参数
             filters.append(
                 action_expert_params_filter,
             )
@@ -100,6 +107,7 @@ class Pi0Config(_model.BaseModelConfig):
 
         if has_lora:
             # If any lora is used, exclude all lora params.
+            # 只要使用lora，永远排除 LoRA 参数本身
             filters.append(
                 nnx.Not(nnx_utils.PathRegex(".*lora.*")),
             )
